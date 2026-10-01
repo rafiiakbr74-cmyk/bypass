@@ -1,0 +1,31 @@
+# render.yaml — Render Blueprint for A2
+#
+# Deploy: push this repo to GitHub, then in Render choose "New > Blueprint" and pick the repo.
+# Render installs dependencies automatically (npm install) and runs the project for you.
+services:
+  - type: web
+    name: a2
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run bot
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # REQUIRED — Bot Token (Developer Portal > Bot > Reset Token)
+      - key: DISCORD_TOKEN
+        sync: false
+      # REQUIRED — Application ID (Developer Portal > General Information)
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      # OPTIONAL — server ID for instant command registration
+      - key: DISCORD_GUILD_ID
+        sync: false
+      # OPTIONAL — image URL for the bot avatar on startup
+      - key: BOT_AVATAR_URL
+        sync: false
+      # OPTIONAL — paid fallback for captcha-gated links (leave blank to stay free)
+      - key: IZEN_API_KEY
+        sync: false
+      - key: IZEN_API_BASE
+        sync: false

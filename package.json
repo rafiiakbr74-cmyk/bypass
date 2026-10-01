@@ -1,0 +1,22 @@
+{
+  "name": "a2-bypass",
+  "version": "2.2.0",
+  "private": true,
+  "type": "module",
+  "description": "A2 — free self-hosted link bypass engine + Discord bot (/bypass with Copy button) + web app. Render-ready (one Web Service).",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "bot": "node bot/index.js",
+    "bot:deploy": "node bot/deploy-commands.js",
+    "bot:invite": "node bot/invite.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

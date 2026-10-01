@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A2</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='12' fill='%238b5cf6'/></svg>">
+<style>
+  :root{
+    --bg:#0a0a0c; --card:#141418; --border:#26262e; --text:#f2f2f5;
+    --muted:#8b8b98; --accent:#8b5cf6; --accent2:#7c3aed; --ok:#22c55e; --err:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 50% -10%,#1a1030 0%,var(--bg) 60%);
+    color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .card{width:100%;max-width:560px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 16px var(--accent)}
+  h1{font-size:20px;margin:0;letter-spacing:.3px}
+  p.sub{color:var(--muted);font-size:13px;margin:6px 0 20px;line-height:1.5}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em}
+  input{
+    width:100%;background:#0b0b0f;border:1px solid var(--border);color:var(--text);
+    padding:15px 16px;border-radius:12px;font-size:14px;outline:none;transition:border .15s
+  }
+  input:focus{border-color:var(--accent)}
+  .row{display:flex;gap:10px;margin-top:14px}
+  button{
+    flex:1;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;border:0;
+    padding:15px;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;transition:opacity .15s,transform .05s
+  }
+  button:hover{opacity:.92}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .ghost{flex:0 0 auto;background:transparent;border:1px solid var(--border);color:var(--muted);padding:15px 18px}
+  .ghost:hover{color:var(--text);border-color:var(--accent)}
+  .out{margin-top:18px;display:none}
+  .out.show{display:block}
+  .box{background:#0b0b0f;border:1px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.6;word-break:break-all}
+  .box.ok{border-color:rgba(34,197,94,.4)}
+  .box.err{border-color:rgba(239,68,68,.4)}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .meta{color:var(--muted);font-size:11px;margin-top:8px}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .foot{margin-top:18px;color:var(--muted);font-size:11px;text-align:center;line-height:1.6}
+  .copy{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:9px;font-size:12px;cursor:pointer;margin-top:10px}
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand"><span class="dot"></span><h1>A2</h1></div>
+    <p class="sub">Paste a supported link (LootLabs, Linkvertise, AdF.ly, ouo.io and 1000+ shorteners) and get the destination instantly &mdash; free, no API key.</p>
+
+    <label for="url">Your link</label>
+    <input id="url" type="url" placeholder="https://linkvertise.com/..." autocomplete="off" spellcheck="false">
+
+    <div class="row">
+      <button id="btn">Bypass</button>
+      <button id="clear" class="ghost" type="button" title="Clear">&#10005;</button>
+    </div>
+
+    <div id="out" class="out">
+      <div id="box" class="box"></div>
+      <div id="meta" class="meta"></div>
+    </div>
+
+    <p class="foot">Powered by a free self-hosted bypass engine. No API key required.</p>
+  </main>
+
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var input = $('url'), btn = $('btn'), out = $('out'), box = $('box'), meta = $('meta');
+
+  var q = new URLSearchParams(location.search).get('url');
+  if (q) input.value = q;
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function show(html, cls, metaText) {
+    out.classList.add('show');
+    box.className = 'box ' + (cls || '');
+    box.innerHTML = html;
+    meta.textContent = metaText || '';
+  }
+
+  async function run() {
+    var url = input.value.trim();
+    if (!url) { input.focus(); return; }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>Bypassing...';
+    show('Working on it...', '', '');
+    var t0 = performance.now();
+    try {
+      var r = await fetch('/api/bypass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+      });
+      var data = await r.json().catch(function () { return {}; });
+      var ms = Math.round(performance.now() - t0);
+      if (r.ok && data.result) {
+        var safe = esc(data.result);
+        show(
+          '&#9989; <strong>Done</strong><br><a href="' + safe + '" target="_blank" rel="noopener">' + safe + '</a>' +
+          '<br><button class="copy" id="copybtn">Copy link</button>',
+          'ok',
+          (data.time ? 'API: ' + data.time + ' \u00b7 ' : '') + 'total: ' + ms + ' ms'
+        );
+        var cb = $('copybtn');
+        if (cb) cb.onclick = function () { navigator.clipboard.writeText(data.result); cb.textContent = 'Copied'; };
+      } else {
+        show('&#10060; ' + esc(data.error || 'Bypass failed'), 'err', data.code ? 'code: ' + esc(data.code) : '');
+      }
+    } catch (e) {
+      show('&#10060; ' + esc(e.message || e), 'err', '');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Bypass';
+    }
+  }
+
+  btn.onclick = run;
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
+  $('clear').onclick = function () { input.value = ''; out.classList.remove('show'); input.focus(); };
+</script>
+</body>
+</html>
